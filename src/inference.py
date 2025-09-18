@@ -8,17 +8,17 @@ from functools import partial
 # 필요한 모듈을 현재 경로에서 찾도록 설정
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from utils import (
+from src.utils import (
     setup_logger,
     logger,
     load_seq_parquet,
     load_ckpt
 )
-from datasets import (
+from src.datasets import (
     SeqDatasetInfer,
     collate_infer,
 )
-from models import SeqClassifier
+from src.models import SeqClassifier
 
 # CUDA 사용 가능 여부 확인 및 디바이스 설정
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

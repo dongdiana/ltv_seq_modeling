@@ -42,7 +42,7 @@ from src.datasets import (
     collate_infer,
     make_length_sorted_loader,
 )
-from models import SeqClassifier
+from src.models import SeqClassifier
 
 # 로거 설정
 log_file_path = os.path.join(os.path.dirname(__file__), "logs/training.log")
