@@ -1,5 +1,2 @@
-data/*
-!data/
-
-seq/*
-!seq/
+# 모든 parquet 파일 무시
+*.parquet
