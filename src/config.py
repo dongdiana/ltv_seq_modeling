@@ -1,0 +1,19 @@
+HP = dict(
+        max_len=1024,
+        batch_size=256,
+        epochs=3,
+        patience=2,
+        d_model=16,
+        nhead=4,
+        nlayers=2,
+        lr=2e-4,
+        wd=2e-4,
+        gamma=1.5,
+        min_freq=3,
+        top_k_vocab=30,
+        num_workers=16,
+        y_col='PAY_AMT_bin',
+        n_splits=3,
+        seed=2025,
+        base_rate=None
+    )

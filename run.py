@@ -12,10 +12,13 @@ from sklearn.model_selection import StratifiedKFold
 import contextlib
 import random
 import traceback
-from config import HP
+from src.config import HP
+from datetime import datetime
+import uuid
+
 
 # pip install -r requirements.txt
-# python longformer/run.py
+# python run.py
 
 from src.utils import (
     setup_logger,
@@ -44,8 +47,19 @@ from src.datasets import (
 )
 from src.models import SeqClassifier
 
+def today_str() -> str:
+    """오늘 날짜를 YYYYMMDD 문자열로 반환"""
+    return datetime.now().strftime("%Y%m%d")
+
+def short_uid(n: int = 6) -> str:
+    """랜덤 6자리(기본) 소문자-hex UID"""
+    return uuid.uuid4().hex[:n]
+
+
 # 로거 설정
-log_file_path = os.path.join(os.path.dirname(__file__), "logs/training.log")
+logs_dir = os.path.join(os.path.dirname(__file__), "logs")
+os.makedirs(logs_dir, exist_ok=True)
+log_file_path = os.path.join(logs_dir, f"training_{today_str()}_{short_uid()}.log")
 logger = setup_logger("main_logger", log_file_path)
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'

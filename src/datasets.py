@@ -2,7 +2,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset, DataLoader, BatchSampler, RandomSampler
 from functools import partial
-from utils import encode_sequence, PIN_MEMORY
+from src.utils import encode_sequence, PIN_MEMORY
 import numpy as np
 
 # datasets.py의 collate_batch 함수 (우측 패딩 적용)
