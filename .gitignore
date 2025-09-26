@@ -23,7 +23,6 @@ conda_env/
 
 # logs
 *.log
-logs/
 *.pid
 *.out
 *.err
