@@ -87,7 +87,7 @@ def train_one(train_df, valid_df, stoi, max_len=None, batch_size=512, epochs=12,
     ckpt_best = f"{save_dir}/{run_name}_best.pt"
 
     # 태블러 데이터 차원 계산
-    tabular_input_dim = tabular_data_train.shape[1] if tabular_data_train is not None else 0
+    tabular_input_dim = tabular_data_train.shape[1]-1 if tabular_data_train is not None else 0
     
     # tabular_data_train 상태 로깅
     if tabular_data_train is not None:
