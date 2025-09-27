@@ -265,6 +265,25 @@ def train_one(train_df, valid_df, stoi, max_len=None, batch_size=512, epochs=12,
 
     return model, stoi, pred_valid, best_metric
 
+def prepare_tabular_features(df: pd.DataFrame, y_col: str):
+    out = df.copy()
+
+    # 1) 범주형 컬럼 추출 (PLAYERID, y_col 제외)
+    cat_cols = out.select_dtypes(include=["object", "category"]).columns.tolist()
+    cat_cols = [c for c in cat_cols if c not in ["PLAYERID", y_col]]
+
+    # 2) 원-핫 인코딩 (전체 df에 한 번에 → 분할 후 컬럼 불일치 방지)
+    if cat_cols:
+        out = pd.get_dummies(out, columns=cat_cols, dummy_na=False)
+
+    # 3) y_col 제거 (피처만 남기려면)
+    if y_col in out.columns:
+        out = out.drop(columns=[y_col])
+
+    # 4) 수치 변환 & 결측 대체 & 타입 통일
+    out = out.apply(pd.to_numeric, errors="coerce").fillna(0.0).astype("float32")
+
+    return out
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -280,6 +299,9 @@ if __name__ == '__main__':
         
         all_tabular_df = pd.concat([tabular_train_df_raw, tabular_val_df_raw, tabular_test_df_raw], ignore_index=True)
         all_tabular_df = all_tabular_df.set_index('PLAYERID')
+
+        # categorical feature 처리
+        all_tabular_df = prepare_tabular_features(all_tabular_df, y_col=HP["y_col"])
         logger.info("All tabular data loaded and merged.")
         
         # 시퀀스 데이터 로드
