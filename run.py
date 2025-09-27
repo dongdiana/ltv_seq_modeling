@@ -14,8 +14,6 @@ import traceback
 import torch.nn.functional as F
 from datetime import datetime  # datetime 모듈 추가
 
-# pip install -r requirements.txt
-# python longformer/run.py
 
 from utils import (
     setup_logger,
@@ -91,6 +89,10 @@ def train_one(train_df, valid_df, stoi, max_len=None, batch_size=512, epochs=12,
     # 태블러 데이터 차원 계산
     tabular_input_dim = tabular_data_train.shape[1] if tabular_data_train is not None else 0
     
+    # tabular_data_train 상태 로깅
+    if tabular_data_train is not None:
+        logger.info(f"[IDX] first 5 index values: {tabular_data_train.index[:5].tolist()}")
+        
     tr_ds = SeqDataset(train_df, stoi, y_col=y_col, max_len=max_len, global_tokens=global_tokens, transformation_mode=transformation_mode, tabular_data=tabular_data_train)
     va_ds = SeqDataset(valid_df, stoi, y_col=y_col, max_len=max_len, global_tokens=global_tokens, transformation_mode=transformation_mode, tabular_data=tabular_data_valid)
     
@@ -278,7 +280,6 @@ if __name__ == '__main__':
         
         all_tabular_df = pd.concat([tabular_train_df_raw, tabular_val_df_raw, tabular_test_df_raw], ignore_index=True)
         all_tabular_df = all_tabular_df.set_index('PLAYERID')
-        
         logger.info("All tabular data loaded and merged.")
         
         # 시퀀스 데이터 로드
@@ -297,9 +298,9 @@ if __name__ == '__main__':
         tabular_test_df_for_model = all_tabular_df.loc[test_df['PLAYERID']].reset_index()
 
         # 모델에 전달할 데이터프레임에서 'PAY_AMT'를 제외한 피처만 선택
-        tabular_train_df_for_model = tabular_train_df_for_model[tabular_cols]
-        tabular_val_df_for_model = tabular_val_df_for_model[tabular_cols]
-        tabular_test_df_for_model = tabular_test_df_for_model[tabular_cols]
+        tabular_train_df_for_model = tabular_train_df_for_model[tabular_cols+['PLAYERID']]
+        tabular_val_df_for_model = tabular_val_df_for_model[tabular_cols+['PLAYERID']]
+        tabular_test_df_for_model = tabular_test_df_for_model[tabular_cols+['PLAYERID']]
         
         logger.info(f"Tabular data partitioned based on sequence data's PLAYERIDs.")
         logger.info(f"[DEBUG] tabular_train_df_for_model shape: {tabular_train_df_for_model.shape}")
