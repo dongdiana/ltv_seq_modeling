@@ -330,6 +330,8 @@ if __name__ == '__main__':
         logger.info(f"[DEBUG] tabular_test_df_for_model shape: {tabular_test_df_for_model.shape}")
         
         train_full = pd.concat([train_df, val_df], ignore_index=True)
+        tabular_train_full = pd.concat([tabular_train_df_for_model, tabular_val_df_for_model], ignore_index=True)
+
         del train_df, val_df
         logger.info("Data loaded and preprocessed successfully.")
         
@@ -359,7 +361,7 @@ if __name__ == '__main__':
 
         logger.info("\n===== Final Model Training =====")
         final_model, _, _, final_metric = train_one(
-            train_full, train_full, stoi, tabular_data_train=tabular_train_df_for_model, tabular_data_valid=tabular_train_df_for_model, **HP, verbose=True
+            train_full, train_full, stoi, tabular_data_train=tabular_train_full, tabular_data_valid=tabular_train_full, **HP, verbose=True
         )
         
         logger.info(f"Final model trained. Best validation RMSE: {final_metric:.4f}")
