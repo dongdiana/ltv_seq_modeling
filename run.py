@@ -89,10 +89,6 @@ def train_one(train_df, valid_df, stoi, max_len=None, batch_size=512, epochs=12,
     # 태블러 데이터 차원 계산
     tabular_input_dim = tabular_data_train.shape[1]-1 if tabular_data_train is not None else 0
     
-    # tabular_data_train 상태 로깅
-    if tabular_data_train is not None:
-        logger.info(f"[IDX] first 5 index values: {tabular_data_train.index[:5].tolist()}")
-        
     tr_ds = SeqDataset(train_df, stoi, y_col=y_col, max_len=max_len, global_tokens=global_tokens, transformation_mode=transformation_mode, tabular_data=tabular_data_train)
     va_ds = SeqDataset(valid_df, stoi, y_col=y_col, max_len=max_len, global_tokens=global_tokens, transformation_mode=transformation_mode, tabular_data=tabular_data_valid)
     
