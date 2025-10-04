@@ -352,10 +352,12 @@ if __name__ == '__main__':
         vocab_size = len(stoi)
         logger.info(f"[INFO] Global Vocab size: {vocab_size}")
 
-        logger.info(f"[DEBUG] HP.max_len = {HP['max_len']}, HP.min_freq = {HP['min_freq']}, HP.top_k_vocab = {HP['top_k_vocab']}")
-        logger.info(f"[DEBUG] stoi sample: {dict(list(stoi.items())[:10])}")
+        logger.info(f"[INFO] HP.max_len = {HP['max_len']}, HP.min_freq = {HP['min_freq']}, HP.top_k_vocab = {HP['top_k_vocab']}")
+        logger.info(f"[INFO] stoi sample: {dict(list(stoi.items())[:10])}")
 
         logger.info("\n===== Final Model Training =====")
+        logger.info(f"[INFO] Transformation mode: {HP['transformation_mode']}")
+        logger.info(f"[INFO] Loss function: {HP['loss_mode']}")
         final_model, _, _, final_metric = train_one(
             train_full, train_full, stoi, tabular_data_train=tabular_train_full, tabular_data_valid=tabular_train_full, **HP, verbose=True
         )
@@ -401,8 +403,38 @@ if __name__ == '__main__':
         
         # 수정된 부분: 실행 시간 기반의 폴더에 CSV 파일 저장
         os.makedirs("outputs", exist_ok=True)
-        predictions_df.to_csv("outputs/test_predictions_reg.csv", index=False)
-        logger.info("[saved] outputs/test_predictions_reg.csv")
+        predictions_df.to_csv(f"outputs/test_predictions_reg_{timestamp}.csv", index=False)
+        logger.info(f"[saved] outputs/test_predictions_reg_{timestamp}.csv")
+
+        # ===== [추가] TEST 성능 평가 (y가 있을 때만) =====
+        try:
+            y_col = HP.get('y_col', 'PAY_AMT')  # 기본값 보호
+            if y_col in test_df.columns:
+                # 예측 순서를 보존하기 위해 predictions_df를 기준으로 merge
+                eval_df = predictions_df.merge(
+                    test_df[['PLAYERID', y_col]],
+                    on='PLAYERID', how='inner'
+                )
+
+                y_true = eval_df[y_col].to_numpy()
+                y_pred = eval_df['payer_prediction'].to_numpy()
+
+                test_metrics = evaluate_reg(y_true, y_pred)
+
+                logger.info(
+                    "[TEST] RMSE {:.4f} | MAE {:.4f} | R2 {:.4f} (N={})"
+                    .format(test_metrics['RMSE'], test_metrics['MAE'], test_metrics['R2'], len(eval_df))
+                )
+
+                # 메트릭 JSON 저장
+                test_metrics_path = f"outputs/test_metrics_{timestamp}.json"
+                with open(test_metrics_path, "w", encoding="utf-8") as f:
+                    json.dump(test_metrics, f, ensure_ascii=False, indent=2)
+                logger.info(f"[saved] {test_metrics_path}")
+            else:
+                logger.info(f"[TEST] '{y_col}' 컬럼이 test_df에 없어 성능 평가를 건너뜁니다.")
+        except Exception:
+            logger.exception("[TEST] 성능 평가 중 오류가 발생했습니다.")
 
     except Exception:
         logger.exception("An error occurred during training or inference.")
