@@ -9,7 +9,7 @@ import numpy as np
 def collate_batch(batch, max_len=None):
     ids = [b["ids"] for b in batch]
     labels = torch.tensor([b["labels"] for b in batch], dtype=torch.float)
-    tabular_features = torch.tensor([b["tabular_features"] for b in batch], dtype=torch.float)
+    tabular_features = torch.from_numpy(np.array([b["tabular_features"] for b in batch], dtype=np.float32))  # torch.from_numpy after transformation to numpy
     
     trimmed_input_ids = []
     trimmed_global_masks = []
@@ -51,7 +51,7 @@ def collate_batch(batch, max_len=None):
 # collate_infer 함수 수정: 마찬가지로 우측 패딩 적용
 def collate_infer(batch, max_len=None):
     ids = [b["ids"] for b in batch]
-    tabular_features = torch.tensor([b["tabular_features"] for b in batch], dtype=torch.float)
+    tabular_features = torch.from_numpy(np.array([b["tabular_features"] for b in batch], dtype=np.float32))   # # torch.from_numpy after transformation to numpy
 
     trimmed_input_ids = []
     trimmed_global_masks = []
