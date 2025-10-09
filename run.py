@@ -207,11 +207,11 @@ def train_one(train_df, valid_df, stoi, max_len=None, batch_size=512, epochs=12,
         
         y_true_valid = np.concatenate(all_y)
         p_hat_valid = np.concatenate(all_p)
-        
+
+        # 수정된 부분: 평가 전에 역변환을 수행하여 원본 스케일에서 지표 계산
         y_true_valid_untransformed = inverse_transform_target(y_true_valid, transformation_mode, transform_params)
         p_hat_valid_untransformed = inverse_transform_target(p_hat_valid, transformation_mode, transform_params)
 
-        # 역변환된 값(원본 스케일)으로 메트릭을 계산합니다.
         metrics_valid = evaluate_reg(y_true_valid_untransformed, p_hat_valid_untransformed)
         score = metrics_valid['RMSE']
 
@@ -279,6 +279,8 @@ def prepare_tabular_features(df: pd.DataFrame, y_col: str):
     # 3) y_col 제거 (피처만 남기려면)
     if y_col in out.columns:
         out = out.drop(columns=[y_col])
+    if 'PAY_AMT_SUM' in out.columns:
+        out = out.drop(columns=['PAY_AMT_SUM'])
 
     # 4) 수치 변환 & 결측 대체 & 타입 통일
     out = out.apply(pd.to_numeric, errors="coerce").fillna(0.0).astype("float32")
@@ -409,36 +411,6 @@ if __name__ == '__main__':
         os.makedirs("outputs", exist_ok=True)
         predictions_df.to_csv(f"outputs/test_predictions_reg_{timestamp}.csv", index=False)
         logger.info(f"[saved] outputs/test_predictions_reg_{timestamp}.csv")
-
-        # ===== [추가] TEST 성능 평가 (y가 있을 때만) =====
-        try:
-            y_col = HP.get('y_col', 'PAY_AMT')  # 기본값 보호
-            if y_col in test_df.columns:
-                # 예측 순서를 보존하기 위해 predictions_df를 기준으로 merge
-                eval_df = predictions_df.merge(
-                    test_df[['PLAYERID', y_col]],
-                    on='PLAYERID', how='inner'
-                )
-
-                y_true = eval_df[y_col].to_numpy()
-                y_pred = eval_df['payer_prediction'].to_numpy()
-
-                test_metrics = evaluate_reg(y_true, y_pred)
-
-                logger.info(
-                    "[TEST] RMSE {:.4f} | MAE {:.4f} | R2 {:.4f} (N={})"
-                    .format(test_metrics['RMSE'], test_metrics['MAE'], test_metrics['R2'], len(eval_df))
-                )
-
-                # 메트릭 JSON 저장
-                test_metrics_path = f"outputs/test_metrics_{timestamp}.json"
-                with open(test_metrics_path, "w", encoding="utf-8") as f:
-                    json.dump(test_metrics, f, ensure_ascii=False, indent=2)
-                logger.info(f"[saved] {test_metrics_path}")
-            else:
-                logger.info(f"[TEST] '{y_col}' 컬럼이 test_df에 없어 성능 평가를 건너뜁니다.")
-        except Exception:
-            logger.exception("[TEST] 성능 평가 중 오류가 발생했습니다.")
 
     except Exception:
         logger.exception("An error occurred during training or inference.")
