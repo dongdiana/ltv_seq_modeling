@@ -23,7 +23,7 @@ HP = dict(
     num_workers=4,
     base_rate=0.03675,
     
-    transformation_mode='log1p', 
+    transformation_mode=None, 
     loss_mode='mae',              
     huber_delta=1.0,               
     regression_model_type='mlp',   

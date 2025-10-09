@@ -164,23 +164,22 @@ def transform_target(y, mode, params=None):
 
 def inverse_transform_target(y_transformed, mode, params):
     """변환된 타겟 변수를 원래 스케일로 되돌립니다."""
-    # 모델의 예측값이 음수일 경우 0으로 클리핑하여 역변환 시 발생하는 문제를 방지합니다.
-    y_transformed = np.maximum(y_transformed, -1.0)
+    # 1. 입력 하한 클리핑: Log1p 변환은 음수에 민감하므로 -1.0으로 하한을 제한합니다.
+    y_transformed = np.maximum(y_transformed, -1.0) 
+    y_original = np.zeros_like(y_transformed, dtype=np.float64) # float64로 계산
 
     if mode == 'log1p':
-        return np.expm1(y_transformed)
+        y_original = np.expm1(y_transformed)
     elif mode == 'box_cox':
         lam = params.get('lambda')
         if lam == 0:
-            return np.maximum(np.exp(y_transformed) - 1e-6, 0)
+            y_original = np.exp(y_transformed) - 1e-6
         else:
-            return np.maximum((y_transformed * lam + 1)**(1/lam) - 1e-6, 0)
+            y_original = (y_transformed * lam + 1)**(1/lam) - 1e-6
     elif mode == 'yeo_johnson':
         lam = params.get('lambda')
         positive_mask = y_transformed >= 0
         negative_mask = y_transformed < 0
-        
-        y_original = np.zeros_like(y_transformed)
         
         # 양수 케이스 처리
         if lam != 0:
@@ -193,8 +192,9 @@ def inverse_transform_target(y_transformed, mode, params):
             y_original[negative_mask] = -(-(y_transformed[negative_mask] * (2 - lam) + 1)**(1/(2 - lam)) + 1)
         else:
             y_original[negative_mask] = np.exp(-y_transformed[negative_mask]) - 1
-        
-        # 최종 결과에서 음수값 방지
-        return np.maximum(y_original - 1e-6, 0)
     else:
-        return np.maximum(y_transformed, 0)
+        y_original = y_transformed
+        
+    # [수정] 최종 결과 상한 클리핑: 오버플로우(inf)를 방지하고, 음수값은 0으로 클리핑합니다.
+    MAX_SAFE_VALUE = 1e+18 
+    return np.clip(y_original, a_min=0, a_max=MAX_SAFE_VALUE)
