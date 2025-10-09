@@ -208,7 +208,11 @@ def train_one(train_df, valid_df, stoi, max_len=None, batch_size=512, epochs=12,
         y_true_valid = np.concatenate(all_y)
         p_hat_valid = np.concatenate(all_p)
         
-        metrics_valid = evaluate_reg(y_true_valid, p_hat_valid)
+        y_true_valid_untransformed = inverse_transform_target(y_true_valid, transformation_mode, transform_params)
+        p_hat_valid_untransformed = inverse_transform_target(p_hat_valid, transformation_mode, transform_params)
+
+        # 역변환된 값(원본 스케일)으로 메트릭을 계산합니다.
+        metrics_valid = evaluate_reg(y_true_valid_untransformed, p_hat_valid_untransformed)
         score = metrics_valid['RMSE']
 
         if verbose:

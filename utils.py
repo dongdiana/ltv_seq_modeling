@@ -164,20 +164,37 @@ def transform_target(y, mode, params=None):
 
 def inverse_transform_target(y_transformed, mode, params):
     """변환된 타겟 변수를 원래 스케일로 되돌립니다."""
+    # 모델의 예측값이 음수일 경우 0으로 클리핑하여 역변환 시 발생하는 문제를 방지합니다.
+    y_transformed = np.maximum(y_transformed, -1.0)
+
     if mode == 'log1p':
         return np.expm1(y_transformed)
     elif mode == 'box_cox':
         lam = params.get('lambda')
-        # 변환된 값과 람다(lambda) 값을 반환합니다.
-        # 0이 포함된 경우 데이터에 1을 더해서 변환합니다.
         if lam == 0:
-            return np.exp(y_transformed) - 1e-6
+            return np.maximum(np.exp(y_transformed) - 1e-6, 0)
         else:
-            return (y_transformed * lam + 1)**(1/lam) - 1e-6
+            return np.maximum((y_transformed * lam + 1)**(1/lam) - 1e-6, 0)
     elif mode == 'yeo_johnson':
         lam = params.get('lambda')
-        # 음수, 양수, 0을 모두 처리
-        return np.where(y_transformed >= 0, (y_transformed * lam + 1)**(1/lam) - 1e-6 if lam != 0 else np.exp(y_transformed) - 1e-6, 
-                        (2 - (2 - lam * y_transformed)**(1/(2-lam)))/lam if lam != 2 else np.log(y_transformed + 1) / (-1))
+        positive_mask = y_transformed >= 0
+        negative_mask = y_transformed < 0
+        
+        y_original = np.zeros_like(y_transformed)
+        
+        # 양수 케이스 처리
+        if lam != 0:
+            y_original[positive_mask] = (y_transformed[positive_mask] * lam + 1)**(1/lam)
+        else:
+            y_original[positive_mask] = np.exp(y_transformed[positive_mask])
+
+        # 음수 케이스 처리
+        if lam != 2:
+            y_original[negative_mask] = -(-(y_transformed[negative_mask] * (2 - lam) + 1)**(1/(2 - lam)) + 1)
+        else:
+            y_original[negative_mask] = np.exp(-y_transformed[negative_mask]) - 1
+        
+        # 최종 결과에서 음수값 방지
+        return np.maximum(y_original - 1e-6, 0)
     else:
-        return y_transformed
+        return np.maximum(y_transformed, 0)

@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from transformers import LongformerConfig, LongformerModel
 
 class LSTMRegressor(nn.Module):
@@ -86,4 +87,4 @@ class LongformerRegressor(nn.Module):
             # LSTM을 사용하려면 `out.last_hidden_state`와 태블러 데이터를 결합해야 함
             logits = self.regressor(combined_features.unsqueeze(1))
             
-        return logits.squeeze(-1)
+        return F.relu(logits.squeeze(-1))
