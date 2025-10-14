@@ -53,6 +53,7 @@ class LongformerRegressor(nn.Module):
         total_input_dim = d_model + tabular_input_dim
 
         if regression_model_type == 'mlp':
+            # MLPRegressor의 마지막 레이어는 Linear이므로 출력에 별도의 활성화 함수가 필요 없음
             self.regressor = MLPRegressor(total_input_dim, d_model * 2)
         elif regression_model_type == 'lstm':
             # Longformer 출력과 태블러 데이터를 결합하여 LSTM 입력으로 사용
@@ -87,4 +88,5 @@ class LongformerRegressor(nn.Module):
             # LSTM을 사용하려면 `out.last_hidden_state`와 태블러 데이터를 결합해야 함
             logits = self.regressor(combined_features.unsqueeze(1))
             
-        return F.relu(logits.squeeze(-1))
+        # 수정된 부분: F.relu를 제거하여 음수 예측이 가능하도록 함
+        return logits.squeeze(-1)
