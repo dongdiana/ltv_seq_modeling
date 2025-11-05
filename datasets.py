@@ -121,6 +121,10 @@ class SeqDataset(Dataset):
         global_mask = torch.zeros(ids.size(), dtype=torch.long)
         # ids에 있는 각 토큰이 global_id_set에 포함되는지 확인하여 마스크를 설정합니다.
         global_mask[torch.isin(ids, torch.tensor(list(global_id_set)))] = 1
+        
+        # [CLS] 토큰 위치(인덱스 0)에 Global Attention 부여 (Longformer의 기본 관행)
+        if ids.size(0) > 0:
+            global_mask[0] = 1
         # =========================================================
 
         # 태블러 데이터 추가
@@ -165,6 +169,10 @@ class SeqDatasetInfer(Dataset):
         for gi, token in enumerate(ids):
             if token.item() in global_id_set:
                 global_mask[gi] = 1
+        
+        # [CLS] 토큰 위치(인덱스 0)에 Global Attention 부여 (Longformer의 기본 관행)
+        if ids.size(0) > 0:
+            global_mask[0] = 1
         
         # 태블러 데이터 추가
         player_id = self.id[i]

@@ -295,9 +295,9 @@ if __name__ == '__main__':
     
     try:
         # 태블러 데이터 로드 및 통합
-        tabular_train_df_raw = pd.read_parquet('./data/train_df_5days.parquet') #/root/sblm/3stage/data/train_df_5days.parquet
-        tabular_val_df_raw = pd.read_parquet('./data/val_df_5days.parquet') #/root/sblm/3stage/data/val_df_5days.parquet
-        tabular_test_df_raw = pd.read_parquet('./data/test_df_5days.parquet') # /root/sblm/3stage/data/test_df_5days.parquet
+        tabular_train_df_raw = pd.read_parquet('./data/train_5days_tab_1015.parquet') #/root/sblm/3stage/data/train_df_5days.parquet
+        tabular_val_df_raw = pd.read_parquet('./data/val_5days_tab_1015.parquet') #/root/sblm/3stage/data/val_df_5days.parquet
+        tabular_test_df_raw = pd.read_parquet('./data/test_5days_tab_1015.parquet') # /root/sblm/3stage/data/test_df_5days.parquet
         
         all_tabular_df = pd.concat([tabular_train_df_raw, tabular_val_df_raw, tabular_test_df_raw], ignore_index=True)
         all_tabular_df = all_tabular_df.set_index('PLAYERID')
@@ -307,9 +307,9 @@ if __name__ == '__main__':
         logger.info("All tabular data loaded and merged.")
         
         # 시퀀스 데이터 로드
-        train_df = load_seq_parquet('./seq/train_df_5days_seq.parquet')
-        val_df = load_seq_parquet('./seq/val_df_5days_seq.parquet')
-        test_df = load_seq_parquet('./seq/test_df_5days_seq.parquet')
+        train_df = load_seq_parquet('./seq/train_5days_seq_1015.parquet')
+        val_df = load_seq_parquet('./seq/val_5days_seq_1015.parquet')
+        test_df = load_seq_parquet('./seq/test_5days_seq_1015.parquet')
         
         # 태블러 데이터에서 불필요한 컬럼 제거
         tabular_cols = [col for col in all_tabular_df.columns if col not in [HP['y_col']]]
